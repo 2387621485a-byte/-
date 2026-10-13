@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026年618考试 - 在线答题系统</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --surface-0: #05070C;
+            --surface-1: #0A0D12;
+            --surface-2: #0F131C;
+            --surface-3: #161D2B;
+            --surface-4: #1E2636;
+            --accent: #38BDF8;
+            --accent-muted: #1E3A5F;
+            --text-primary: #E8EDF3;
+            --text-secondary: #9CA3AF;
+            --correct: #6EE7B7;
+            --wrong: #F87171;
+            --spacing-xs: clamp(0.25rem, 0.5vw, 0.5rem);
+            --spacing-sm: clamp(0.5rem, 1vw, 1rem);
+            --spacing-md: clamp(1rem, 2vw, 1.5rem);
+            --spacing-lg: clamp(1.5rem, 3vw, 2.5rem);
+            --spacing-xl: clamp(2rem, 4vw, 3.5rem);
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-full: 999px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--surface-0) 0%, var(--surface-2) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: var(--spacing-md);
+            font-size: clamp(0.9rem, 1.5vw, 1rem);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: var(--surface-3);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: var(--spacing-sm);
+            color: var(--accent);
+        }
+
+        .exam-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--surface-4);
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+        }
+
+        .info-value {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        #timer {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5em;
+        }
+
+        .question-card {
+            background: var(--surface-3);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-md);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+
+        .question-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.15);
+        }
+
+        .question-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .question-type {
+            background: var(--accent-muted);
+            color: var(--accent);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-full);
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .question-score {
+            background: var(--surface-4);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-full);
+            font-size: 0.8em;
+            color: var(--text-secondary);
+        }
+
+        .question-text {
+            font-size: 1.1em;
+            font-weight: 500;
+            margin-bottom: var(--spacing-md);
+            line-height: 1.7;
+        }
+
+        .options {
+            display: grid;
+            gap: var(--spacing-sm);
+        }
+
+        .option {
+            background: var(--surface-2);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .option:hover {
+            background: var(--surface-4);
+            border-color: var(--accent);
+        }
+
+        .option input[type="radio"],
+        .option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--accent);
+        }
+
+        .option.selected {
+            background: var(--accent-muted);
+            border-color: var(--accent);
+        }
+
+        .option.correct {
+            background: rgba(110, 231, 183, 0.1);
+            border-color: var(--correct);
+        }
+
+        .option.wrong {
+            background: rgba(248, 113, 113, 0.1);
+            border-color: var(--wrong);
+        }
+
+        .option label {
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .btn {
+            background: var(--accent);
+            color: var(--surface-0);
+            padding: var(--spacing-md) var(--spacing-xl);
+            border: none;
+            border-radius: var(--radius-full);
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            margin: var(--spacing-xl) 0;
+        }
+
+        .result-card {
+            background: var(--surface-3);
+            padding: var(--spacing-xl);
+            border-radius: var(--radius-md);
+            margin: var(--spacing-lg) 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+
+        .result-card.show {
+            display: block;
+        }
+
+        .result-score {
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .score-number {
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--spacing-md);
+            margin: var(--spacing-lg) 0;
+        }
+
+        .detail-item {
+            background: var(--surface-2);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-sm);
+            text-align: center;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .detail-value {
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+
+        .detail-value.correct {
+            color: var(--correct);
+        }
+
+        .detail-value.wrong {
+            color: var(--wrong);
+        }
+
+        #exam-form.submitted .question-card {
+            pointer-events: none;
+        }
+
+        .progress-bar {
+            background: var(--surface-2);
+            height: 8px;
+            border-radius: var(--radius-full);
+            overflow: hidden;
+            margin-top: var(--spacing-md);
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, var(--accent), #6EE7B7);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: var(--spacing-sm);
+            }
+
+            .exam-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>2026年618考试 - 在线答题系统</h1>
+            <div class="exam-info">
+                <div class="info-item">
+                    <span class="info-label">题目数量</span>
+                    <span class="info-value">30题</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">总分</span>
+                    <span class="info-value">100分</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">考试时间</span>
+                    <span class="info-value" id="timer">60:00</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">答题进度</span>
+                    <span class="info-value" id="progress">0/30</span>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </header>
+
+        <form id="exam-form">
+            <!-- Questions will be inserted here -->
+        </form>
+
+        <div class="btn-container">
+            <button type="button" class="btn" id="submit-btn" onclick="submitExam()">提交试卷</button>
+        </div>
+
+        <div class="result-card" id="result-card">
+            <div class="result-score">
+                <div class="score-number" id="final-score">0</div>
+                <div style="color: var(--text-secondary); margin-top: var(--spacing-sm);">总分：100分</div>
+            </div>
+            <div class="result-details">
+                <div class="detail-item">
+                    <div class="detail-label">正确题数</div>
+                    <div class="detail-value correct" id="correct-count">0</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">错误题数</div>
+                    <div class="detail-value wrong" id="wrong-count">0</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">正确率</div>
+                    <div class="detail-value" id="accuracy">0%</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">用时</div>
+                    <div class="detail-value" id="time-used">0分钟</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {"type": "判断题", "question": "1、未来光主要是基于办公环境要求开发的产品。", "options": ["A、正确", "B、错误"], "answer": "B", "score": 2},
+            {"type": "判断题", "question": "2、灯带试灯时，配件包接通电源后，再和灯带连接", "options": ["A、错误", "B、正确"], "answer": "A", "score": 2},
+            {"type": "判断题", "question": "3、雷士电商北欧吸顶灯产品外框柔性灯罩发光光效不均匀，灯带隔一段就有一节黑竖条是质量问题", "options": ["A、错误", "B、正确"], "answer": "A", "score": 2},
+            {"type": "判断题", "question": "4、记忆三档调色产品出现光色不同步，10s内快速开关8次，再次开灯即同步", "options": ["A、正确", "B、错误"], "answer": "A", "score": 2},
+            {"type": "判断题", "question": "5、AAAAA级台灯是国家标准是否正确？", "options": ["A、正确", "B、错误"], "answer": "B", "score": 2},
+            {"type": "判断题", "question": "6、吊灯的高度调节与灯体结构有关。", "options": ["A、正确", "B、错误"], "answer": "A", "score": 2},
+            {"type": "判断题", "question": "7、吊灯的水晶都是人造的，是仿水晶玻璃", "options": ["A、正确", "B、错误"], "answer": "A", "score": 2},
+            {"type": "判断题", "question": "8、四灯浴霸开启取暖制热过程中换气扇自动开启，属于机器异常", "options": ["A、错误", "B、正确"], "answer": "A", "score": 2},
+            {"type": "判断题", "question": "9、并排平行安装的T5灯管时，2根间距需保持5厘米以上。", "options": ["A、正确", "B、错误"], "answer": "A", "score": 2},
+            {"type": "判断题", "question": "10、无线射频控制的浴霸，主机需要额外的通断电开关，每次使用后断开电源", "options": ["A、错误", "B、正确"], "answer": "A", "score": 2},
+            {"type": "多选题", "question": "11、母婴级浴霸的优点", "options": ["A、护眼健康光", "B、升温迅速", "C、升温均匀性好", "D、多重强效杀菌"], "answer": "ABCD", "score": 4},
+            {"type": "多选题", "question": "12、光伏板充电跟哪几个因素有关", "options": ["A、天气", "B、安装位置", "C、灯珠数量", "D、线的长度"], "answer": "AB", "score": 4},
+            {"type": "多选题", "question": "13、吸顶盘小了怎么办？", "options": ["A、不好说，可以补另一个灯的吸顶盘解决", "B、不能改，成本过高", "C、推荐盘大的类似款", "D、可以改大，提需求就好了"], "answer": "BC", "score": 4},
+            {"type": "多选题", "question": "14、IP40灯具核心优势有哪些？", "options": ["A、国产全光谱", "B、快装+快接", "C、款式丰富", "D、IP40防护等级"], "answer": "ABCD", "score": 4},
+            {"type": "多选题", "question": "15、关于筒射灯的区分下列描述正确的是", "options": ["A、筒灯射灯都需要能效", "B、筒灯特点：发光面是雾化PC片，光束角比较大，一般都是大于50°，泛光，均为照亮空间的效果。", "C、射灯有明显光束感，明暗光影打造空间层次感。射灯有可左右调角度和不可调角度两种", "D、射灯特点：发光面是透镜或者反光杯，光束角比较小，一般都是小于50°，有15°，24°，30°，36°等等，打出的光比较聚，重点照亮局部空间的效果："], "answer": "BCD", "score": 4},
+            {"type": "多选题", "question": "16、入座感应的台灯自动开灯的原因有哪些？", "options": ["A、传感器过于灵敏", "B、光线干扰", "C、电磁干扰", "D、环境中有移动物体"], "answer": "ABCD", "score": 4},
+            {"type": "多选题", "question": "17、国AA级对照度的要求中，测试矩形区域分为：中心区域和总区域，分别是对应哪2种大小？", "options": ["A、600*400mm", "B、800*600mm", "C、500*300mm", "D、700*500mm"], "answer": "CD", "score": 4},
+            {"type": "多选题", "question": "18、客户投诉水晶是假的，是玻璃，哪些是对的？", "options": ["A、普通玻璃是指蓝玻和绿玻", "B、玻璃大白料是水晶料", "C、水晶也是玻璃的一种", "D、水晶更闪，玻璃做不到"], "answer": "ABC", "score": 4},
+            {"type": "多选题", "question": "19、新品未来光大路灯3代Pro+有哪些功能？", "options": ["A、入座感应", "B、红黄光", "C、普瑞灯珠", "D、米家智能", "E、底座滑轮", "F、昼夜节律光"], "answer": "ABCDEF", "score": 4},
+            {"type": "多选题", "question": "20、充电异常及不亮如何自检？", "options": ["A、换适配器", "B、换灯", "C、换充电线", "D、退货"], "answer": "AC", "score": 4},
+            {"type": "多选题", "question": "21、浴霸上常用的塑件材料为", "options": ["A、PBT", "B、PPS", "C、PC", "D、PP"], "answer": "ABCD", "score": 4},
+            {"type": "多选题", "question": "22、光源模组使用的优点有哪些？", "options": ["A、高显指", "B、应用广泛", "C、易安装", "D、LED灯珠"], "answer": "ABCD", "score": 4},
+            {"type": "多选题", "question": "23、IP50灯具核心优势有哪些？", "options": ["A、普瑞全光谱", "B、快装+快接", "C、增加了硅胶", "D、IP50防护等级"], "answer": "ABD", "score": 4},
+            {"type": "多选题", "question": "24、太阳能路灯可以装哪里", "options": ["A、大门", "B、卧室", "C、院子", "D、围墙"], "answer": "ACD", "score": 4},
+            {"type": "单选题", "question": "25、吊灯高度都是可以调节的？", "options": ["A、看客户想要多少，可定制", "B、看结构，详情上会有说明", "C、都可以，调节管子和吊线就更好了"], "answer": "B", "score": 4},
+            {"type": "单选题", "question": "26、光伏板需要向哪个方位安装？", "options": ["A、南", "B、北", "C、西", "D、东"], "answer": "A", "score": 4},
+            {"type": "单选题", "question": "27、遥控器按哪个恢复出厂设置？", "options": ["A、M", "B、AUTO", "C、OFF", "D、ON"], "answer": "B", "score": 4},
+            {"type": "单选题", "question": "28、以下哪个等级表示无蓝光效果最好？", "options": ["A、RG3", "B、RG2", "C、RG1", "D、RG0"], "answer": "D", "score": 4},
+            {"type": "单选题", "question": "29、两线制开关，带电安装开关时碰到86开关的连接线内部金属导线，是否会触电？", "options": ["A、不会", "B、会"], "answer": "A", "score": 4},
+            {"type": "单选题", "question": "30、选项中哪个筒灯最亮？", "options": ["A、5W400K光效65lm/W", "B、5W6500K光效65lm/W", "C、4W400K二级能效", "D、4W300K二级能效"], "answer": "C", "score": 4}
+        ];
+
+        let startTime = Date.now();
+        let timerInterval;
+        let timeRemaining = 60 * 60; // 60 minutes in seconds
+
+        function renderQuestions() {
+            const form = document.getElementById('exam-form');
+            questions.forEach((q, index) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.id = `question-${index}`;
+
+                const inputType = q.type === '多选题' ? 'checkbox' : 'radio';
+                const inputName = `question-${index}`;
+
+                let optionsHTML = '';
+                q.options.forEach((option, optIndex) => {
+                    const optionId = `${inputName}-${optIndex}`;
+                    optionsHTML += `
+                        <div class="option" onclick="selectOption(this, ${index})">
+                            <input type="${inputType}" id="${optionId}" name="${inputName}" value="${option.charAt(0)}" onchange="updateProgress()">
+                            <label for="${optionId}">${option}</label>
+                        </div>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="question-header">
+                        <span class="question-type">${q.type}</span>
+                        <span class="question-score">${q.score}分</span>
+                    </div>
+                    <div class="question-text">${q.question}</div>
+                    <div class="options">
+                        ${optionsHTML}
+                    </div>
+                `;
+
+                form.appendChild(card);
+            });
+        }
+
+        function selectOption(element, questionIndex) {
+            const input = element.querySelector('input');
+            if (input.type === 'radio') {
+                const allOptions = element.parentElement.querySelectorAll('.option');
+                allOptions.forEach(opt => opt.classList.remove('selected'));
+                element.classList.add('selected');
+            } else {
+                element.classList.toggle('selected');
+            }
+        }
+
+        function updateProgress() {
+            let answered = 0;
+            questions.forEach((q, index) => {
+                const inputs = document.querySelectorAll(`input[name="question-${index}"]:checked`);
+                if (inputs.length > 0) answered++;
+            });
+            document.getElementById('progress').textContent = `${answered}/30`;
+            document.getElementById('progress-fill').style.width = `${(answered / 30) * 100}%`;
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                document.getElementById('timer').textContent =
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    alert('考试时间已到，系统将自动提交试卷！');
+                    submitExam();
+                }
+            }, 1000);
+        }
+
+        function submitExam() {
+            if (!confirm('确定要提交试卷吗？提交后将无法修改答案。')) {
+                return;
+            }
+
+            clearInterval(timerInterval);
+            const form = document.getElementById('exam-form');
+            form.classList.add('submitted');
+
+            let totalScore = 0;
+            let correctCount = 0;
+            let wrongCount = 0;
+
+            questions.forEach((q, index) => {
+                const inputs = document.querySelectorAll(`input[name="question-${index}"]:checked`);
+                let userAnswer = Array.from(inputs).map(input => input.value).sort().join('');
+                const correctAnswer = q.answer.split('').sort().join('');
+
+                const questionCard = document.getElementById(`question-${index}`);
+                const options = questionCard.querySelectorAll('.option');
+
+                options.forEach(option => {
+                    const input = option.querySelector('input');
+                    const value = input.value;
+
+                    if (q.answer.includes(value)) {
+                        option.classList.add('correct');
+                    }
+
+                    if (input.checked && !q.answer.includes(value)) {
+                        option.classList.add('wrong');
+                    }
+                });
+
+                if (userAnswer === correctAnswer && userAnswer !== '') {
+                    totalScore += q.score;
+                    correctCount++;
+                } else {
+                    wrongCount++;
+                }
+            });
+
+            const timeUsed = Math.ceil((Date.now() - startTime) / 60000);
+
+            document.getElementById('final-score').textContent = totalScore;
+            document.getElementById('correct-count').textContent = correctCount;
+            document.getElementById('wrong-count').textContent = wrongCount;
+            document.getElementById('accuracy').textContent = `${((correctCount / 30) * 100).toFixed(1)}%`;
+            document.getElementById('time-used').textContent = `${timeUsed}分钟`;
+            document.getElementById('result-card').classList.add('show');
+            document.getElementById('submit-btn').style.display = 'none';
+
+            document.getElementById('result-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        renderQuestions();
+        startTimer();
+    </script>
+</body>
+</html>
